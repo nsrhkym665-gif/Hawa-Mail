@@ -27,25 +27,82 @@ button,input{font:inherit}.top{background:#0b1220;color:#fff;position:sticky;top
 </section>
 </main><div class="toast" id="toast"></div>
 <script>
-const $=id=>document.getElementById(id);let address='',messages=[],demo=false,selected=null;
+const $=id=>document.getElementById(id);
+const API='https://smails.dev/api';
+let address='', token='', messages=[], selected=null, loading=false;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),1800)}
-function demoAddress(){return 'demo-'+Math.random().toString(36).slice(2,10)+'@hawa-mail.test'}
-function demoMessages(){return [{id:'demo1',from:'welcome@example.com',subject:'مرحبًا بك في Hawa Mail',text:'هذه رسالة تجريبية لتوضيح شكل صندوق الوارد.\n\nرمز التحقق: 482731\n\nعند تشغيل نسخة Cloudflare وربط نطاق حقيقي، ستظهر الرسائل الواردة الفعلية هنا.',date:new Date().toISOString()}]}
-async function api(path,opt){const r=await fetch(path,opt);if(!r.ok)throw Error('API '+r.status);return r.json()}
+function setStatus(t,ok=true){$('status').textContent=t;document.querySelector('.dot').style.background=ok?'#12b76a':'#f04438'}
+function formatDate(d){try{return d?new Date(d).toLocaleString('ar-EG',{dateStyle:'short',timeStyle:'short'}):''}catch{return ''}}
+function normalizeList(data){
+  if(Array.isArray(data)) return data;
+  if(Array.isArray(data.messages)) return data.messages;
+  if(Array.isArray(data.data)) return data.data;
+  return [];
+}
+async function api(path,opt={}){
+  const headers=new Headers(opt.headers||{});
+  if(token) headers.set('Authorization','Bearer '+token);
+  const r=await fetch(API+path,{...opt,headers});
+  if(!r.ok) throw Error('API '+r.status);
+  return r.json();
+}
 async function create(){
- try{const d=await api('/api/inbox',{method:'POST'});address=d.address;demo=false;localStorage.hawaAddress=address;$('addr').value=address;$('status').textContent='الصندوق جاهز لاستقبال الرسائل';$('notice').classList.remove('show');await load();}
- catch(e){demo=true;address=demoAddress();messages=demoMessages();$('addr').value=address;$('status').textContent='وضع العرض — الاستقبال الحقيقي يحتاج تشغيل Worker وربط نطاق';$('notice').textContent='أنت تفتح نسخة الواجهة على GitHub Pages. هذه النسخة للعرض فقط؛ GitHub Pages لا يستقبل البريد الوارد. عند نشر Worker وربط Email Routing سيعمل الاستقبال الحقيقي.';$('notice').classList.add('show');render();}
+  if(loading)return; loading=true; selected=null;
+  $('addr').value='جاري إنشاء البريد…';
+  $('list').innerHTML='<div class="empty"><div class="ico">⏳</div>جاري إنشاء صندوقك…</div>';
+  try{
+    const d=await api('/mailbox',{method:'POST'});
+    address=d.address; token=d.token;
+    localStorage.setItem('hawaAddress',address); localStorage.setItem('hawaToken',token);
+    $('addr').value=address; setStatus('الصندوق جاهز لاستقبال الرسائل');
+    $('notice').classList.remove('show'); await load();
+  }catch(e){
+    $('addr').value=''; setStatus('تعذر إنشاء صندوق البريد',false);
+    $('notice').textContent='الخدمة المجانية لم تستجب الآن. اضغط «بريد جديد» للمحاولة مرة أخرى.';
+    $('notice').classList.add('show'); messages=[]; render();
+  }finally{loading=false}
 }
 async function load(){
- if(!address)return create(); if(demo){render();return}
- try{const d=await api('/api/inbox?address='+encodeURIComponent(address));messages=d.messages||[];$('status').textContent='متصل — يتم التحديث تلقائيًا';render();}
- catch(e){$('status').textContent='تعذر الاتصال بالخادم';}
+  if(!address||!token)return create();
+  try{
+    const data=await api('/mailbox/messages');
+    messages=normalizeList(data);
+    setStatus('متصل — يتم تحديث الوارد تلقائيًا');
+    render();
+  }catch(e){
+    setStatus('تعذر تحديث الوارد حاليًا',false);
+    if(!messages.length) render();
+  }
 }
-function render(){ $('count').textContent=`${messages.length} ${messages.length===1?'رسالة':'رسائل'}`;if(!messages.length){$('list').innerHTML='<div class="empty"><div class="ico">📭</div>لا توجد رسائل بعد.<br>أرسل رسالة إلى العنوان أعلاه وستظهر هنا.</div>';return} $('list').innerHTML=messages.map((m,i)=>`<div class="message ${selected===i?'active':''}" onclick="openMsg(${i})"><div class="subject">${esc(m.subject||'(بدون عنوان)')}</div><div class="meta">${esc(m.from||'مرسل غير معروف')} · ${formatDate(m.date)}</div></div>`).join('');}
-function formatDate(d){try{return new Date(d).toLocaleString('ar-EG',{dateStyle:'short',timeStyle:'short'})}catch{return ''}}
-function openMsg(i){selected=i;const m=messages[i];let body=esc(m.text||'').replace(/\b\d{4,8}\b/g,x=>`<span class="code">${x}</span>`);$('reader').innerHTML=`<div class="readerbody"><h2>${esc(m.subject||'(بدون عنوان)')}</h2><div class="meta">من: ${esc(m.from||'')}<br>إلى: ${esc(address)}<br>${formatDate(m.date)}</div><hr class="rule"><div class="body">${body}</div></div>`;render()}
-$('newBtn').onclick=create;$('refreshBtn').onclick=load;$('copyBtn').onclick=async()=>{try{await navigator.clipboard.writeText(address);toast('تم نسخ عنوان البريد')}catch{toast('انسخ العنوان يدويًا')}};
-$('deleteBtn').onclick=()=>{localStorage.removeItem('hawaAddress');address='';messages=[];selected=null;create()};
-(async()=>{address=localStorage.hawaAddress||'';if(address){$('addr').value=address;await load()}else await create()})();setInterval(()=>{if(address&&!demo)load()},7000);
+function messageText(m){return m.text||m.body||m.content||m.html||''}
+function messageFrom(m){return m.from||m.sender||m.fromAddress||''}
+function messageDate(m){return m.receivedAt||m.createdAt||m.date||m.timestamp||''}
+function messageSubject(m){return m.subject||'(بدون عنوان)'}
+function render(){
+  $('count').textContent=`${messages.length} ${messages.length===1?'رسالة':'رسائل'}`;
+  if(!messages.length){$('list').innerHTML='<div class="empty"><div class="ico">📭</div>لا توجد رسائل بعد.<br>أرسل رسالة إلى العنوان أعلاه وستظهر هنا.</div>';return}
+  $('list').innerHTML=messages.map((m,i)=>`<div class="message ${selected===i?'active':''}" onclick="openMsg(${i})"><div class="subject">${esc(messageSubject(m))}</div><div class="meta">${esc(messageFrom(m)||'مرسل غير معروف')} · ${formatDate(messageDate(m))}</div></div>`).join('');
+}
+async function openMsg(i){
+  selected=i; render();
+  const m=messages[i];
+  $('reader').innerHTML='<div class="empty"><div class="ico">⏳</div>جاري فتح الرسالة…</div>';
+  try{
+    let full=m;
+    if(m.id) full=await api('/mailbox/messages/'+encodeURIComponent(m.id));
+    let body=messageText(full);
+    body=esc(body).replace(/\b\d{4,8}\b/g,x=>`<span class="code">${x}</span>`);
+    $('reader').innerHTML=`<div class="readerbody"><h2>${esc(messageSubject(full))}</h2><div class="meta">من: ${esc(messageFrom(full))}<br>إلى: ${esc(address)}<br>${formatDate(messageDate(full))}</div><hr class="rule"><div class="body">${body||'لا يوجد نص ظاهر في الرسالة.'}</div></div>`;
+  }catch(e){$('reader').innerHTML='<div class="empty"><div class="ico">⚠️</div>تعذر فتح الرسالة الآن.</div>'}
+}
+$('newBtn').onclick=()=>{localStorage.removeItem('hawaAddress');localStorage.removeItem('hawaToken');address='';token='';messages=[];create()};
+$('refreshBtn').onclick=load;
+$('copyBtn').onclick=async()=>{if(!address)return;try{await navigator.clipboard.writeText(address);toast('تم نسخ عنوان البريد')}catch{toast('انسخ العنوان يدويًا')}};
+$('deleteBtn').onclick=()=>{$('newBtn').click()};
+(async()=>{
+  address=localStorage.getItem('hawaAddress')||''; token=localStorage.getItem('hawaToken')||'';
+  if(address&&token){$('addr').value=address;await load()}else await create();
+})();
+setInterval(()=>{if(address&&token&&!loading)load()},7000);
 </script></body></html>
