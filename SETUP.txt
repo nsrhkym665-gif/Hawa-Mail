@@ -1,0 +1,11 @@
+المشروع جاهز للنشر على Cloudflare Workers مع استقبال بريد عبر Email Routing.
+
+المطلوب فقط عند النشر:
+1) حساب Cloudflare.
+2) Domain تملكه.
+3) إنشاء KV Namespace واستبدال REPLACE_WITH_KV_NAMESPACE_ID.
+4) استبدال REPLACE_WITH_YOUR_DOMAIN بنطاقك.
+5) تفعيل Email Routing وربط Catch-all/العناوين الواردة بخدمة Email Worker.
+6) نشر المشروع.
+
+بدون Domain وبيئة استقبال بريد لا يمكن لأي موقع ثابت استقبال رسائل الإنترنت الحقيقية.

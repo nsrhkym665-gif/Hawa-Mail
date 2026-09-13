@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>بريد مؤقت</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6fa;color:#172033;font-family:system-ui,Tahoma}.top{background:#111827;color:white;padding:15px 5%;display:flex;justify-content:space-between;align-items:center}.brand{font-size:21px;font-weight:800}.wrap{max-width:1100px;margin:auto;padding:18px}.card{background:white;border:1px solid #e5e7eb;border-radius:18px;padding:20px;box-shadow:0 8px 25px #0000000b}.address{display:flex;gap:8px;margin-top:15px}.address input{flex:1;min-width:0;padding:14px;border:2px solid #d8dee8;border-radius:12px;direction:ltr;text-align:left;font-size:16px}.btn{border:0;border-radius:11px;padding:12px 15px;cursor:pointer;background:#111827;color:white;font:inherit}.light{background:#eef2f7;color:#172033}.grid{display:grid;grid-template-columns:350px 1fr;gap:16px;margin-top:16px}.list,.reader{min-height:430px}.row{padding:15px;border-bottom:1px solid #edf0f4;cursor:pointer}.row:hover{background:#f8fafc}.sub{font-weight:800}.small{font-size:12px;color:#667085;margin-top:4px}.empty{text-align:center;padding:55px 15px;color:#667085}.body{white-space:pre-wrap;line-height:1.9}.code{display:inline-block;background:#e8eefc;border-radius:7px;padding:3px 9px;font-weight:900;letter-spacing:3px;direction:ltr}@media(max-width:760px){.grid{grid-template-columns:1fr}.address{flex-direction:column}}
+</style></head>
+<body><header class="top"><div class="brand">✉️ بريد مؤقت</div><button class="btn" onclick="create()">＋ بريد جديد</button></header>
+<main class="wrap"><section class="card"><h2>بريد إلكتروني مؤقت</h2><div style="color:#667085">أنشئ صندوقًا مؤقتًا واستقبل الرسائل الواردة إليه.</div><div class="address"><input id="addr" readonly><button class="btn" onclick="copy()">نسخ</button><button class="btn light" onclick="load()">⟳ تحديث</button></div></section>
+<div class="grid"><section class="card list"><h3>الوارد <span id="n" class="small"></span></h3><div id="list" class="empty">جارٍ التحميل...</div></section><section class="card reader" id="reader"><div class="empty">اختر رسالة لعرضها</div></section></div></main>
+<script>
+let address="",items=[];
+const $=id=>document.getElementById(id);
+async function create(){let r=await fetch("/api/inbox",{method:"POST"});let d=await r.json();address=d.address;localStorage.tempAddress=address;$("addr").value=address;await load()}
+async function load(){if(!address)address=localStorage.tempAddress||"";if(!address){return create()}$("addr").value=address;let r=await fetch("/api/inbox?address="+encodeURIComponent(address));let d=await r.json();items=d.messages||[];render()}
+function render(){$("n").textContent="("+items.length+")";$("list").innerHTML=items.length?items.map((m,i)=>`<div class=row onclick="openMsg(${i})"><div class=sub>${esc(m.subject)}</div><div class=small>${esc(m.from)} · ${new Date(m.date).toLocaleString("ar-EG")}</div></div>`).join(""):'<div class=empty>لا توجد رسائل بعد</div>'}
+function openMsg(i){let m=items[i], safe=esc(m.text);safe=safe.replace(/\b\d{4,8}\b/g,x=>'<span class=code>'+x+"</span>");$("reader").innerHTML=`<h2>${esc(m.subject)}</h2><div class=small>من: ${esc(m.from)}<br>إلى: ${esc(address)}<br>${new Date(m.date).toLocaleString("ar-EG")}</div><hr><div class=body>${safe}</div>`}
+async function copy(){await navigator.clipboard.writeText(address);alert("تم نسخ البريد")}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+load();setInterval(load,5000);
+</script></body></html>
