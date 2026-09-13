@@ -1,4 +1,4 @@
-name = "temp-mail-ready"
+name = "hawa-mail"
 main = "worker.js"
 compatibility_date = "2026-09-14"
 

@@ -1,19 +1,51 @@
 <!doctype html>
-<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>بريد مؤقت</title>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1220"><title>Hawa Mail — بريد مؤقت</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f4f6fa;color:#172033;font-family:system-ui,Tahoma}.top{background:#111827;color:white;padding:15px 5%;display:flex;justify-content:space-between;align-items:center}.brand{font-size:21px;font-weight:800}.wrap{max-width:1100px;margin:auto;padding:18px}.card{background:white;border:1px solid #e5e7eb;border-radius:18px;padding:20px;box-shadow:0 8px 25px #0000000b}.address{display:flex;gap:8px;margin-top:15px}.address input{flex:1;min-width:0;padding:14px;border:2px solid #d8dee8;border-radius:12px;direction:ltr;text-align:left;font-size:16px}.btn{border:0;border-radius:11px;padding:12px 15px;cursor:pointer;background:#111827;color:white;font:inherit}.light{background:#eef2f7;color:#172033}.grid{display:grid;grid-template-columns:350px 1fr;gap:16px;margin-top:16px}.list,.reader{min-height:430px}.row{padding:15px;border-bottom:1px solid #edf0f4;cursor:pointer}.row:hover{background:#f8fafc}.sub{font-weight:800}.small{font-size:12px;color:#667085;margin-top:4px}.empty{text-align:center;padding:55px 15px;color:#667085}.body{white-space:pre-wrap;line-height:1.9}.code{display:inline-block;background:#e8eefc;border-radius:7px;padding:3px 9px;font-weight:900;letter-spacing:3px;direction:ltr}@media(max-width:760px){.grid{grid-template-columns:1fr}.address{flex-direction:column}}
-</style></head>
-<body><header class="top"><div class="brand">✉️ بريد مؤقت</div><button class="btn" onclick="create()">＋ بريد جديد</button></header>
-<main class="wrap"><section class="card"><h2>بريد إلكتروني مؤقت</h2><div style="color:#667085">أنشئ صندوقًا مؤقتًا واستقبل الرسائل الواردة إليه.</div><div class="address"><input id="addr" readonly><button class="btn" onclick="copy()">نسخ</button><button class="btn light" onclick="load()">⟳ تحديث</button></div></section>
-<div class="grid"><section class="card list"><h3>الوارد <span id="n" class="small"></span></h3><div id="list" class="empty">جارٍ التحميل...</div></section><section class="card reader" id="reader"><div class="empty">اختر رسالة لعرضها</div></section></div></main>
+:root{--bg:#f5f7fb;--card:#fff;--ink:#101828;--muted:#667085;--line:#e4e7ec;--brand:#111827;--soft:#eef2f6;--ok:#067647;--okbg:#ecfdf3;--accent:#2563eb}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#eef2f7 0,#f8fafc 55%,#eef2f7 100%);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;min-height:100vh}
+button,input{font:inherit}.top{background:#0b1220;color:#fff;position:sticky;top:0;z-index:10;box-shadow:0 4px 20px #0002}.topin{max-width:1120px;margin:auto;padding:15px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-size:22px;font-weight:900;letter-spacing:-.4px}.new{background:#fff;color:#0b1220;border:0;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}.wrap{max-width:1120px;margin:auto;padding:22px 16px 42px}.hero{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:26px;box-shadow:0 14px 45px #1018280d}.eyebrow{display:inline-flex;align-items:center;gap:7px;background:#f2f4f7;border-radius:999px;padding:7px 11px;color:#344054;font-size:13px;font-weight:800}.hero h1{font-size:clamp(28px,5vw,44px);margin:15px 0 8px;letter-spacing:-1.2px}.hero p{color:var(--muted);margin:0;line-height:1.8}.mailbox{margin-top:20px;display:flex;gap:10px}.mailbox input{flex:1;min-width:0;border:2px solid #d0d5dd;border-radius:14px;padding:14px 15px;background:#fff;direction:ltr;text-align:left;font-size:17px;font-weight:750;outline:none}.mailbox input:focus{border-color:#98a2b3;box-shadow:0 0 0 4px #98a2b322}.btn{border:0;border-radius:14px;padding:13px 16px;background:var(--brand);color:#fff;font-weight:800;cursor:pointer;white-space:nowrap}.btn.soft{background:var(--soft);color:var(--ink)}.actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}.status{margin-top:15px;display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}.dot{width:9px;height:9px;border-radius:50%;background:#12b76a;box-shadow:0 0 0 4px #12b76a18}.grid{display:grid;grid-template-columns:360px minmax(0,1fr);gap:16px;margin-top:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 10px 35px #1018280a;overflow:hidden}.head{padding:18px 18px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}.head h2{font-size:18px;margin:0}.count{font-size:12px;color:var(--muted);font-weight:700}.list{min-height:470px}.message{padding:16px 18px;border-bottom:1px solid #f0f2f5;cursor:pointer;transition:.15s}.message:hover{background:#f8fafc}.message.active{background:#f2f6ff}.subject{font-weight:850;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.empty{padding:72px 22px;text-align:center;color:var(--muted);line-height:1.9}.empty .ico{font-size:38px;margin-bottom:8px}.reader{min-height:470px}.readerbody{padding:22px}.readerbody h2{margin:0 0 9px;font-size:23px}.rule{border:0;border-top:1px solid var(--line);margin:18px 0}.body{white-space:pre-wrap;word-break:break-word;line-height:1.95;color:#344054}.code{display:inline-block;direction:ltr;background:#eaf2ff;color:#174ea6;border:1px solid #cfe0ff;border-radius:8px;padding:2px 8px;font-weight:950;letter-spacing:2px}.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;background:#101828;color:#fff;padding:11px 15px;border-radius:12px;font-size:14px;transition:.2s;z-index:20}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.notice{margin-top:12px;background:#fffaeb;border:1px solid #fedf89;color:#93370d;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.7;display:none}.notice.show{display:block}@media(max-width:780px){.topin{padding:13px 14px}.brand{font-size:19px}.wrap{padding:14px 12px 28px}.hero{padding:20px;border-radius:20px}.mailbox{flex-direction:column}.mailbox input{width:100%}.actions{display:grid;grid-template-columns:1fr 1fr}.actions .btn{width:100%}.grid{grid-template-columns:1fr}.list,.reader{min-height:360px}.reader{min-height:420px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="topin"><div class="brand">✉️ Hawa Mail</div><button class="new" id="newBtn">＋ بريد جديد</button></div></header>
+<main class="wrap">
+<section class="hero">
+<span class="eyebrow">🛡️ بريد مؤقت للخصوصية والاختبار</span>
+<h1>بريد إلكتروني مؤقت</h1>
+<p>أنشئ عنوانًا مؤقتًا واستقبل الرسائل الواردة في صندوق واحد. الرسائل المؤقتة تُحفظ لفترة محدودة.</p>
+<div class="mailbox"><input id="addr" readonly placeholder="جاري إنشاء البريد…"><button class="btn" id="copyBtn">نسخ العنوان</button></div>
+<div class="actions"><button class="btn soft" id="refreshBtn">↻ تحديث الوارد</button><button class="btn soft" id="deleteBtn">مسح الصندوق</button></div>
+<div class="status"><span class="dot"></span><span id="status">جاري تجهيز صندوقك…</span></div>
+<div class="notice" id="notice"></div>
+</section>
+<section class="grid">
+<div class="card list"><div class="head"><h2>الوارد</h2><span class="count" id="count">0 رسالة</span></div><div id="list"><div class="empty"><div class="ico">📨</div>جاري تحميل الرسائل…</div></div></div>
+<div class="card reader" id="reader"><div class="empty"><div class="ico">📩</div>اختر رسالة من الوارد لعرض محتواها.</div></div>
+</section>
+</main><div class="toast" id="toast"></div>
 <script>
-let address="",items=[];
-const $=id=>document.getElementById(id);
-async function create(){let r=await fetch("/api/inbox",{method:"POST"});let d=await r.json();address=d.address;localStorage.tempAddress=address;$("addr").value=address;await load()}
-async function load(){if(!address)address=localStorage.tempAddress||"";if(!address){return create()}$("addr").value=address;let r=await fetch("/api/inbox?address="+encodeURIComponent(address));let d=await r.json();items=d.messages||[];render()}
-function render(){$("n").textContent="("+items.length+")";$("list").innerHTML=items.length?items.map((m,i)=>`<div class=row onclick="openMsg(${i})"><div class=sub>${esc(m.subject)}</div><div class=small>${esc(m.from)} · ${new Date(m.date).toLocaleString("ar-EG")}</div></div>`).join(""):'<div class=empty>لا توجد رسائل بعد</div>'}
-function openMsg(i){let m=items[i], safe=esc(m.text);safe=safe.replace(/\b\d{4,8}\b/g,x=>'<span class=code>'+x+"</span>");$("reader").innerHTML=`<h2>${esc(m.subject)}</h2><div class=small>من: ${esc(m.from)}<br>إلى: ${esc(address)}<br>${new Date(m.date).toLocaleString("ar-EG")}</div><hr><div class=body>${safe}</div>`}
-async function copy(){await navigator.clipboard.writeText(address);alert("تم نسخ البريد")}
-function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-load();setInterval(load,5000);
+const $=id=>document.getElementById(id);let address='',messages=[],demo=false,selected=null;
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),1800)}
+function demoAddress(){return 'demo-'+Math.random().toString(36).slice(2,10)+'@hawa-mail.test'}
+function demoMessages(){return [{id:'demo1',from:'welcome@example.com',subject:'مرحبًا بك في Hawa Mail',text:'هذه رسالة تجريبية لتوضيح شكل صندوق الوارد.\n\nرمز التحقق: 482731\n\nعند تشغيل نسخة Cloudflare وربط نطاق حقيقي، ستظهر الرسائل الواردة الفعلية هنا.',date:new Date().toISOString()}]}
+async function api(path,opt){const r=await fetch(path,opt);if(!r.ok)throw Error('API '+r.status);return r.json()}
+async function create(){
+ try{const d=await api('/api/inbox',{method:'POST'});address=d.address;demo=false;localStorage.hawaAddress=address;$('addr').value=address;$('status').textContent='الصندوق جاهز لاستقبال الرسائل';$('notice').classList.remove('show');await load();}
+ catch(e){demo=true;address=demoAddress();messages=demoMessages();$('addr').value=address;$('status').textContent='وضع العرض — الاستقبال الحقيقي يحتاج تشغيل Worker وربط نطاق';$('notice').textContent='أنت تفتح نسخة الواجهة على GitHub Pages. هذه النسخة للعرض فقط؛ GitHub Pages لا يستقبل البريد الوارد. عند نشر Worker وربط Email Routing سيعمل الاستقبال الحقيقي.';$('notice').classList.add('show');render();}
+}
+async function load(){
+ if(!address)return create(); if(demo){render();return}
+ try{const d=await api('/api/inbox?address='+encodeURIComponent(address));messages=d.messages||[];$('status').textContent='متصل — يتم التحديث تلقائيًا';render();}
+ catch(e){$('status').textContent='تعذر الاتصال بالخادم';}
+}
+function render(){ $('count').textContent=`${messages.length} ${messages.length===1?'رسالة':'رسائل'}`;if(!messages.length){$('list').innerHTML='<div class="empty"><div class="ico">📭</div>لا توجد رسائل بعد.<br>أرسل رسالة إلى العنوان أعلاه وستظهر هنا.</div>';return} $('list').innerHTML=messages.map((m,i)=>`<div class="message ${selected===i?'active':''}" onclick="openMsg(${i})"><div class="subject">${esc(m.subject||'(بدون عنوان)')}</div><div class="meta">${esc(m.from||'مرسل غير معروف')} · ${formatDate(m.date)}</div></div>`).join('');}
+function formatDate(d){try{return new Date(d).toLocaleString('ar-EG',{dateStyle:'short',timeStyle:'short'})}catch{return ''}}
+function openMsg(i){selected=i;const m=messages[i];let body=esc(m.text||'').replace(/\b\d{4,8}\b/g,x=>`<span class="code">${x}</span>`);$('reader').innerHTML=`<div class="readerbody"><h2>${esc(m.subject||'(بدون عنوان)')}</h2><div class="meta">من: ${esc(m.from||'')}<br>إلى: ${esc(address)}<br>${formatDate(m.date)}</div><hr class="rule"><div class="body">${body}</div></div>`;render()}
+$('newBtn').onclick=create;$('refreshBtn').onclick=load;$('copyBtn').onclick=async()=>{try{await navigator.clipboard.writeText(address);toast('تم نسخ عنوان البريد')}catch{toast('انسخ العنوان يدويًا')}};
+$('deleteBtn').onclick=()=>{localStorage.removeItem('hawaAddress');address='';messages=[];selected=null;create()};
+(async()=>{address=localStorage.hawaAddress||'';if(address){$('addr').value=address;await load()}else await create()})();setInterval(()=>{if(address&&!demo)load()},7000);
 </script></body></html>

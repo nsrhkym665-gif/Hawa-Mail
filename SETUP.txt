@@ -1,11 +1,8 @@
-المشروع جاهز للنشر على Cloudflare Workers مع استقبال بريد عبر Email Routing.
+Hawa Mail — ملحوظة مهمة
 
-المطلوب فقط عند النشر:
-1) حساب Cloudflare.
-2) Domain تملكه.
-3) إنشاء KV Namespace واستبدال REPLACE_WITH_KV_NAMESPACE_ID.
-4) استبدال REPLACE_WITH_YOUR_DOMAIN بنطاقك.
-5) تفعيل Email Routing وربط Catch-all/العناوين الواردة بخدمة Email Worker.
-6) نشر المشروع.
+النسخة التي رفعتها على GitHub Pages ستعرض الواجهة فقط.
+للبريد الحقيقي: Cloudflare Worker + KV + نطاق حقيقي + Email Routing.
 
-بدون Domain وبيئة استقبال بريد لا يمكن لأي موقع ثابت استقبال رسائل الإنترنت الحقيقية.
+الواجهة الجديدة فيها وضع عرض تلقائي إذا لم تجد /api/inbox، لذلك لن تظهر شاشة "جارٍ التحميل" الفارغة على GitHub Pages.
+
+عند تشغيل Worker على نفس المشروع ستنتقل تلقائيًا للاستقبال الحقيقي.
