@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hawa Mail</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f7fb;color:#111827;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial}
+header{background:#0d1627;color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-size:21px;font-weight:800}button{border:0;border-radius:14px;padding:13px 18px;font-weight:800;font-size:16px;cursor:pointer}.new{background:#fff;color:#0d1627}
+main{max-width:760px;margin:18px auto;padding:0 14px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:22px;padding:20px;margin-bottom:15px;box-shadow:0 8px 25px #0f172a0b}
+.badge{display:inline-block;background:#f1f5f9;border-radius:999px;padding:8px 12px;color:#475569;font-weight:700}h1{font-size:30px;margin:18px 0 8px}.sub{color:#6b7280;font-size:17px;line-height:1.7}
+.address{display:flex;gap:8px}.address input{flex:1;min-width:0;border:2px solid #d8dde5;border-radius:15px;padding:15px;font-size:17px;font-weight:800;direction:ltr;text-align:left}.copy{background:#0d1627;color:#fff;white-space:nowrap}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.secondary{background:#edf1f6;color:#172033;width:100%}.status{text-align:center;color:#6b7280;margin-top:13px;font-size:14px}.dot{display:inline-block;width:9px;height:9px;background:#16a34a;border-radius:50%;margin-left:5px}.error{display:none;margin-top:12px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:12px;border-radius:14px;line-height:1.6}
+.inboxhead{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e7eb;padding-bottom:12px}.count{color:#6b7280}.empty{text-align:center;color:#9ca3af;padding:42px 10px}.msg{padding:16px 4px;border-bottom:1px solid #e5e7eb;cursor:pointer}.msg:last-child{border:0}.msg b{font-size:17px}.meta{font-size:13px;color:#6b7280;margin-top:5px}.intro{font-size:14px;color:#64748b;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.msg.new{background:#f8fbff;border-right:4px solid #0d1627}.msg.new b:before{content:'جديد';display:inline-block;font-size:11px;background:#0d1627;color:#fff;border-radius:999px;padding:3px 7px;margin-left:7px;vertical-align:middle}.timeago{font-size:12px;color:#94a3b8;margin-top:3px}.copycode{background:#0d1627;color:#fff;border:0;border-radius:10px;padding:8px 12px;font-weight:800;cursor:pointer;margin:6px 0 10px}
+.modal{position:fixed;inset:0;background:#0008;display:none;align-items:flex-end;padding:12px}.modal.show{display:flex}.sheet{background:#fff;width:min(760px,100%);max-height:88vh;overflow:auto;border-radius:22px;padding:20px}.close{float:left;background:#edf1f6}.body{margin-top:18px;line-height:1.8;overflow-wrap:anywhere}.code{display:inline-block;background:#ecfdf5;color:#166534;border:1px solid #bbf7d0;border-radius:10px;padding:8px 14px;font-size:25px;font-weight:900;letter-spacing:3px;margin:10px 0}
+@media(max-width:560px){main{margin:12px auto}.card{padding:16px}h1{font-size:27px}.address{display:block}.copy{width:100%;margin-top:8px}.row{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header><div class="brand">Hawa Mail ✉️</div><button class="new" id="new">＋ بريد جديد</button></header>
+<main>
+<section class="card">
+<div class="badge">🛡️ بريد مؤقت للاختبار والخصوصية منخفضة المخاطر</div>
+<h1>بريد إلكتروني مؤقت</h1>
+<p class="sub">أنشئ عنوانًا مجانيًا واستقبل الرسائل الواردة في صندوق واحد.</p>
+<div class="address"><input id="addr" readonly value="جارٍ إنشاء البريد..."><button class="copy" id="copy">نسخ العنوان</button></div>
+<div class="row"><button class="secondary" id="clear">مسح الصندوق</button><button class="secondary" id="refresh">↻ تحديث الوارد</button></div>
+<div class="status"><span class="dot"></span><span id="status">جاري إنشاء البريد...</span></div>
+<div class="error" id="error"></div>
+</section>
+<section class="card">
+<div class="inboxhead"><h2 style="margin:0">الوارد</h2><span class="count" id="count">0 رسالة</span></div>
+<div id="list"><div class="empty">جاري إنشاء صندوق البريد...</div></div>
+</section>
+</main>
+<div class="modal" id="modal"><div class="sheet"><button class="close" id="close">إغلاق</button><h2 id="subj">الرسالة</h2><div class="meta" id="from"></div><div id="code"></div><div class="body" id="body"></div></div></div>
+<script>
+const API='https://grabmail.io/api/v1';
+let address='';
+let seenIds=new Set(JSON.parse(localStorage.getItem('hawaSeenIds')||'[]'));
+const $=x=>document.getElementById(x);
+function err(t){$('error').textContent=t;$('error').style.display=t?'block':'none'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function code(t){let m=String(t||'').match(/(?:^|\D)(\d{4,8})(?!\d)/);return m?m[1]:''}
+function timeAgo(v){const d=new Date(v),s=Math.max(0,Math.floor((Date.now()-d.getTime())/1000));if(s<60)return 'منذ لحظات';const m=Math.floor(s/60);if(m<60)return 'منذ '+m+' دقيقة';const h=Math.floor(m/60);if(h<24)return 'منذ '+h+' ساعة';const days=Math.floor(h/24);return 'منذ '+days+' يوم'}
+function saveSeen(){localStorage.setItem('hawaSeenIds',JSON.stringify([...seenIds].slice(-300)))}
+function makeAddress(){return 'hawa-'+Math.random().toString(36).slice(2,8)+'-'+Math.random().toString(36).slice(2,7)+'@grabmail.io'}
+async function create(){
+ err('');$('status').textContent='جاري إنشاء البريد...';$('list').innerHTML='<div class="empty">جاري إنشاء صندوق البريد...</div>';
+ address=makeAddress(); $('addr').value=address; localStorage.setItem('hawaAddress',address);
+ $('status').textContent='البريد جاهز — يتم فحص الوارد تلقائيًا'; await refresh();
+}
+async function refresh(){
+ if(!address)return;
+ try{
+  const r=await fetch(API+'/mailbox?address='+encodeURIComponent(address),{cache:'no-store'});
+  if(!r.ok)throw new Error();
+  const d=await r.json();render(d.messages||[]);$('status').textContent='البريد جاهز — آخر تحديث الآن';err('');
+ }catch(e){$('status').textContent='تعذر الاتصال بخدمة البريد';err('الخدمة الخارجية لم تستجب الآن. اضغط «تحديث الوارد» بعد قليل.');}
+}
+function render(ms){
+ $('count').textContent=ms.length+' رسالة';
+ if(!ms.length){$('list').innerHTML='<div class="empty">لا توجد رسائل حتى الآن.<br>أي رسالة تصل إلى العنوان ستظهر هنا.</div>';return}
+ $('list').innerHTML=ms.map(m=>`<div class="msg" data-id="${esc(m.id)}"><b>${esc(m.subject||'(بدون موضوع)')}</b><div class="meta">${esc(m.from||'')} • ${new Date(m.date).toLocaleString('ar-EG')}</div></div>`).join('');
+ document.querySelectorAll('.msg').forEach(x=>x.onclick=()=>openMsg(x.dataset.id));
+}
+async function openMsg(id){
+ try{
+  const r=await fetch(API+'/message/'+encodeURIComponent(id)+'?mailbox='+encodeURIComponent(address),{cache:'no-store'});
+  if(!r.ok)throw new Error();const m=await r.json();
+  $('subj').textContent=m.subject||'رسالة';$('from').textContent=m.from||'';
+  const text=m.text||'';const c=code(text);$('code').innerHTML=c?'<div class="code">'+c+'</div>':'';
+  $('body').textContent=text||'لا يوجد نص قابل للعرض.';$('modal').classList.add('show');
+ }catch(e){alert('تعذر فتح الرسالة الآن.')}
+}
+$('new').onclick=create;
+$('refresh').onclick=refresh;
+$('clear').onclick=async()=>{if(!address)return;if(!confirm('مسح الرسائل؟'))return;const r=await refresh();};
+$('copy').onclick=async()=>{if(!address)return;try{await navigator.clipboard.writeText(address)}catch{}$('copy').textContent='تم النسخ ✓';setTimeout(()=>$('copy').textContent='نسخ العنوان',1200)};
+$('close').onclick=()=>$('modal').classList.remove('show');$('modal').onclick=e=>{if(e.target.id==='modal')$('modal').classList.remove('show')};
+(async()=>{address=localStorage.getItem('hawaAddress')||'';if(!address)await create();else{$('addr').value=address;await refresh()}setInterval(refresh,5000)})();
+</script>
+</body></html>
